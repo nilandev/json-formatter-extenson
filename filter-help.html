@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz@0,9..40;1,9..40&display=swap"
+      rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSONPath Filter</title>
+  <style>
+    body {
+      font-family: "DM Sans", sans-serif;
+      font-optical-sizing: auto;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 960px;
+      margin: 0 auto;
+      font-size: 1rem;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    h2 {
+      color: #666;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+<h1>Using JSONPath Filters</h1>
+
+<p class="lead">JSONPath is a query language for JSON, similar to XPath for XML. It allows you to select and extract data from a JSON document. You use a JSONPath expression to traverse the path to an element in the JSON structure. You start at the root node or element, represented by <code>$</code>, and reach the required element in the JSON structure to extract data from it.</p>
+
+<p>A JSONPath expression specifies a path to an element (or a set of elements) in a JSON structure. Paths can use the dot notation:</p>
+
+<h2>Syntax</h2>
+<table>
+  <tr>
+    <th>Symbol</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>$</code></td>
+    <td>The root object/element</td>
+  </tr>
+  <tr>
+    <td><code>@</code></td>
+    <td>The current object/element</td>
+  </tr>
+  <tr>
+    <td><code>. or []</code></td>
+    <td>Child operator</td>
+  </tr>
+  <tr>
+    <td><code>..</code></td>
+    <td>Recursive descent. JSONPath borrows this syntax from E4X.</td>
+  </tr>
+  <tr>
+    <td><code>*</code></td>
+    <td>Wildcard. All objects/elements regardless of their names.</td>
+  </tr>
+  <tr>
+    <td><code>[]</code></td>
+    <td>Subscript operator. XPath uses it to iterate over element collections and for predicates. In
+      Javascript and JSON it is the native array operator.
+    </td>
+  </tr>
+  <tr>
+    <td><code>[,]</code></td>
+    <td>Union operator in XPath results in a combination of node sets. JSONPath allows alternate
+      names or array indices as a set.
+    </td>
+  </tr>
+  <tr>
+    <td><code>[start:end:step]</code></td>
+    <td>Array slice operator borrowed from ES4.</td>
+  </tr>
+  <tr>
+    <td><code>()</code></td>
+    <td>Script expression can be used as an alternative to JSONPath (using the underlying script
+      engine).
+    </td>
+  </tr>
+  <tr>
+    <td><code>?()</code></td>
+    <td>Applies a filter (script) expression.</td>
+  </tr>
+</table>
+
+<h2>Examples</h2>
+<table>
+  <tr>
+    <th>JSONPath</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>$.store.book[*].author</code></td>
+    <td>All authors of books in the store</td>
+  </tr>
+  <tr>
+    <td><code>$..author</code></td>
+    <td>All authors</td>
+  </tr>
+  <tr>
+    <td><code>$.store..price</code></td>
+    <td>All prices in the store</td>
+  </tr>
+  <tr>
+    <td><code>$..book[2]</code></td>
+    <td>The third book</td>
+  </tr>
+  <tr>
+    <td><code>$..book[(@.length-1)]</code></td>
+    <td>The last book</td>
+  </tr>
+  <tr>
+    <td><code>$..book[0,1]</code></td>
+    <td>The first two books</td>
+  </tr>
+  <tr>
+    <td><code>$..book[:2]</code></td>
+    <td>The first two books</td>
+  </tr>
+  <tr>
+    <td><code>$..book[?(@.isbn)]</code></td>
+    <td>All books with an ISBN number</td>
+  </tr>
+  <tr>
+    <td><code>$..book[?(@.price<10)]</code></td>
+    <td>All books cheaper than 10</td>
+  </tr>
+  <tr>
+    <td><code>$..*</code></td>
+    <td>All members of JSON structure</td>
+  </tr>
+</table>
+</body>
+</html>

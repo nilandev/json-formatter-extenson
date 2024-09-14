@@ -1,0 +1,10 @@
+.dark-theme {
+  background-color: #212121;
+  color: #d4d4d4;
+  font-size: 0.85em;
+}
+
+
+.dark-theme .json-formatter-row {
+  font-size: 0.85rem;
+}

@@ -1,11 +1,13 @@
 {
     "manifest_version": 3,
-    "name": "JSON Formatter with Always-Visible Filter",
-    "version": "1.4",
-    "description": "Formats JSON responses with customizable themes and always-visible filtering",
+    "name": "JSON Formatter",
+    "version": "1.0",
+    "description": "Formats JSON responses with customizable themes and JSONPath filtering",
     "permissions": [
         "activeTab",
-        "storage"
+        "storage",
+        "clipboardWrite",
+        "downloads"
     ],
     "action": {
         "default_popup": "popup.html",
@@ -13,18 +15,26 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "<all_urls>"
-            ],
+            "matches": ["<all_urls>"],
             "js": [
+                "JSONPath/index-browser-umd.min.cjs",
                 "json-formatter.umd.js",
                 "content.js"
             ],
             "css": [
                 "json-formatter.css",
-                "filter-styles.css"
+                "filter-styles.css",
+                "themes/dark.css",
+                "themes/light.css",
+                "themes/github-dark.css"
             ],
             "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["filter-help.html"],
+            "matches": ["<all_urls>"]
         }
     ],
     "icons": {

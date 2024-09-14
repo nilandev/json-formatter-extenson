@@ -1,0 +1,84 @@
+/* github-dark-theme.css */
+.github-dark-theme {
+  background-color: #0d1117;
+  color: #c9d1d9;
+}
+
+.github-dark-theme .json-formatter-row {
+  font-size: 0.85rem;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-bracket {
+  color: #8b949e;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-number {
+  color: #79c0ff;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-string {
+  color: #a5d6ff;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-boolean {
+  color: #ff7b72;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-null {
+  color: #ff7b72;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-undefined {
+  color: #ff7b72;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-function {
+  color: #d2a8ff;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-date {
+  color: #79c0ff;
+}
+
+.github-dark-theme .json-formatter-row > a > .json-formatter-url {
+  color: #58a6ff;
+}
+
+.github-dark-theme .json-formatter-row .json-formatter-row {
+  margin-left: 1em;
+}
+
+.github-dark-theme .json-formatter-row .json-formatter-toggler {
+  font-size: 0.85em;
+  line-height: 1.2em;
+  vertical-align: middle;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.github-dark-theme .json-formatter-row .json-formatter-toggler:after {
+  content: "▶";
+}
+
+.github-dark-theme .json-formatter-row.json-formatter-open > .json-formatter-toggler-link .json-formatter-toggler:after {
+  content: "▼";
+}
+
+.github-dark-theme .json-formatter-row .json-formatter-key {
+  color: #7ee787;
+  padding-right: 0.2em;
+}
+
+.github-dark-theme .json-formatter-row .json-formatter-toggler-link {
+  cursor: pointer;
+}
+
+.github-dark-theme .json-formatter-row .json-formatter-toggler-link:hover > .json-formatter-toggler {
+  opacity: 1;
+}
+
+.github-dark-theme .json-formatter-row,
+.github-dark-theme .json-formatter-row a,
+.github-dark-theme .json-formatter-row a:hover{
+  color: #a5d6ff;
+}
