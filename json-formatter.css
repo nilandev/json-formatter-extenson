@@ -1,0 +1,5 @@
+#json-container {
+  margin-top: 60px; /* Adjust based on the height of your filter container */
+  padding: 10px;
+  font-family: inherit; /* Use the font set by JavaScript */
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>JSON Formatter Settings</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+    }
+
+    .popup {
+      border-radius: 20px;
+    }
+
+    select,
+    input {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .section-header {
+      font-size: 0.7rem;
+      color: #999;
+      font-weight: 500;
+      text-transform: uppercase;
+      margin: 0;
+      padding: 0 0 5px 0;
+    }
+
+
+    #saveButton {
+        background-color: rgb(76, 175, 80);
+        color: white;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-width: initial;
+        border-style: none;
+        border-color: initial;
+        border-image: initial;
+        border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="popup">
+  <h3 class="section-header">Theme</h3>
+  <select id="themeSelect">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+    <option value="custom">Custom</option>
+  </select>
+  <h3 class="section-header">Font family</h3>
+  <input type="text" id="fontInput" placeholder="e.g., Arial, sans-serif">
+  <button id="saveButton">Save Settings</button>
+  <script src="popup.js"></script>
+</div>
+</body>
+</html>

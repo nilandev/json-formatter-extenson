@@ -1,0 +1,62 @@
+/* filter-styles.css */
+#json-filter-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: #f3f4f6;
+  padding: 1rem;
+  display: flex;
+  gap: 10px;
+  font-family: inherit; /* Use the font set by JavaScript */
+}
+
+#json-filter-input {
+  width: 60%;
+  padding: 5px;
+  margin-bottom: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.json-formatter-row{
+  font-family: inherit !important; /* Use the font set by JavaScript */
+  font-size: 0.9rem;
+}
+
+
+#json-copy-button,
+#json-filter-button,
+#json-clear-button,
+#json-toggle-view-button {
+  /* width: 100%; */
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#json-clear-button {
+  background-color: #f44336;
+}
+
+#json-toggle-view-button {
+  background-color: #2196F3;
+}
+
+#json-filter-button:hover {
+  background-color: #45a049;
+}
+
+#json-clear-button:hover {
+  background-color: #d32f2f;
+}
+
+#json-toggle-view-button:hover {
+  background-color: #1976D2;
+}
+
