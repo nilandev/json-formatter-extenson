@@ -4,6 +4,7 @@ let jsonObj = null;
 let originalContent = null;
 let isFlatView = false;
 let isExpandedAll = false;
+let filteredJsonObj = null; // To store the filtered JSON
 
 function initializeExtension() {
     chrome.storage.sync.get(['theme', 'fontFamily'], function(data) {
@@ -11,7 +12,6 @@ function initializeExtension() {
         currentFontFamily = data.fontFamily || 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
     });
 }
-
 
 function isJSONString(str) {
     try {
@@ -97,6 +97,7 @@ function addFilterUI() {
     </div>
     <button id="json-expand-all-button">Expand All</button>
     <button id="json-copy-button">Copy</button>
+    <button id="json-export-csv-button">Export CSV</button>
      <button id="json-filter-help-button">
        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
      </button>
@@ -108,7 +109,7 @@ function addFilterUI() {
     document.getElementById('json-foldable-view-button').addEventListener('click', () => switchView(false));
     document.getElementById('json-flat-view-button').addEventListener('click', () => switchView(true));
     document.getElementById('json-copy-button').addEventListener('click', copyJSON);
-    // document.getElementById('json-export-csv-button').addEventListener('click', exportToCSV);
+    document.getElementById('json-export-csv-button').addEventListener('click', exportFilteredToCSV);
     document.getElementById('json-filter-help-button').addEventListener('click', showFilterHelp);
     document.getElementById('json-expand-all-button').addEventListener('click', expandAll);
     document.getElementById('json-filter-input').addEventListener('keyup', function(event) {
@@ -118,27 +119,117 @@ function addFilterUI() {
     });
 }
 
-
 function performFilter() {
     const filterExpression = document.getElementById('json-filter-input').value;
     console.log('Attempting to filter with expression:', filterExpression);
 
     try {
-        const filteredObj = JSONPath.JSONPath({path: filterExpression, json: jsonObj});
-        console.log('Filtered result:', filteredObj);
+        filteredJsonObj = JSONPath.JSONPath({path: filterExpression, json: jsonObj});
+        console.log('Filtered result:', filteredJsonObj);
 
-        if (filteredObj === undefined || filteredObj === null) {
+        if (filteredJsonObj === undefined || filteredJsonObj === null) {
             alert('No results found for this JSONPath expression.');
             return;
         }
 
         isExpandedAll = false; // Reset expansion state
-        renderJSON(filteredObj, currentTheme, currentFontFamily);
+        renderJSON(filteredJsonObj, currentTheme, currentFontFamily);
     } catch (error) {
         console.error('JSONPath filtering error:', error);
         alert(`Invalid JSONPath syntax: ${error.message}. Please check your syntax.`);
     }
 }
+
+function exportFilteredToCSV() {
+    if (filteredJsonObj) {
+        exportToCSV(filteredJsonObj, 'filtered_export.csv');
+    } else {
+        exportToCSV(jsonObj, 'export.csv');
+    }
+}
+
+function exportToCSV(data, filename = 'export.csv') {
+    let items = Array.isArray(data) ? data[0] : [data];
+
+    const blob = new Blob([jsonToCsv(items)], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) {
+        navigator.msSaveBlob(blob, filename);
+    } else {
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+}
+
+function jsonToCsv(jsonData) {
+    let headers = new Set();
+    let rows = [];
+
+    // Helper function to sanitize multi-line strings
+    function sanitizeString(value) {
+        if (typeof value === 'string') {
+            return value.replace(/[\n\r]+/g, ' ').replace(/"/g, '""');
+        } else if (Array.isArray(value)) {
+            return value.join('; ');  // Join array elements with semicolon or any other separator
+        } else if (typeof value === 'object') {
+            return JSON.stringify(value);
+        }
+        return value;
+    }
+
+    // Recursive function to flatten nested JSON objects
+    function flattenObject(obj, parentKey = '') {
+        let flatObject = {};
+
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                let fullKey = parentKey ? `${parentKey}.${key}` : key;
+
+                // If the value is an object, recurse, otherwise add the value
+                if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+                    Object.assign(flatObject, flattenObject(obj[key], fullKey));
+                } else {
+                    flatObject[fullKey] = sanitizeString(obj[key]);
+                    headers.add(fullKey);  // Collect headers dynamically
+                }
+            }
+        }
+
+        return flatObject;
+    }
+
+    // Handle both array of objects or single object
+    let jsonArray = Array.isArray(jsonData) ? jsonData : [jsonData];
+
+    // Flatten each object and store the result in rows
+    jsonArray.forEach((item) => {
+        rows.push(flattenObject(item));
+    });
+
+    // Convert headers Set to Array
+    let headerArray = Array.from(headers);
+
+    // Create CSV string with headers and rows
+    let csv = headerArray.join(',') + '\n';
+
+    rows.forEach(row => {
+        let rowArray = headerArray.map(header => {
+            // Ensure that each row has a value for each header (undefined if missing)
+            return row[header] !== undefined ? `"${row[header]}"` : '';
+        });
+        csv += rowArray.join(',') + '\n';
+    });
+
+    return csv;
+}
+
 
 function clearFilter() {
     document.getElementById('json-filter-input').value = '';
@@ -154,11 +245,40 @@ function showFilterHelp() {
 function copyJSON() {
     const jsonString = JSON.stringify(jsonObj, null, 2);
     navigator.clipboard.writeText(jsonString).then(() => {
-        alert('JSON copied to clipboard!');
+        showToast('Copied to clipboard!');
     }).catch(err => {
         console.error('Failed to copy JSON: ', err);
-        alert('Failed to copy JSON. Please check console for details.');
     });
+}
+
+function showToast(message, duration = 3000) {
+    // Remove existing toast if any
+    const existingToast = document.getElementById('json-formatter-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.id = 'json-formatter-toast';
+    toast.innerHTML = `
+    ${message}
+    <button class="toast-close">&times;</button>
+  `;
+
+    // Add toast to the page
+    document.body.appendChild(toast);
+
+    // Add click event to close button
+    const closeButton = toast.querySelector('.toast-close');
+    closeButton.addEventListener('click', () => {
+        toast.remove();
+    });
+
+    // Auto dismiss
+    setTimeout(() => {
+        toast.remove();
+    }, duration);
 }
 
 function switchView(toFlatView) {

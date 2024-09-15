@@ -2,19 +2,32 @@
 <html lang="en">
 <head>
   <title>JSON Formatter Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz@0,9..40;1,9..40&display=swap"
+      rel="stylesheet">
   <style>
+
     body {
+      font-family: "DM Sans", sans-serif;
+      font-optical-sizing: auto;
+      line-height: 1.5;
+      max-width: 960px;
+      margin: 0 auto;
+      font-size: 1rem;
       width: 300px;
-      padding: 10px;
     }
 
     .popup {
       border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
     }
 
     select,
     input {
-      width: 100%;
       margin-bottom: 10px;
     }
 
@@ -27,17 +40,43 @@
       padding: 0 0 5px 0;
     }
 
-
     #saveButton {
-        background-color: rgb(76, 175, 80);
-        color: white;
-        cursor: pointer;
-        padding: 8px 12px;
-        border-width: initial;
-        border-style: none;
-        border-color: initial;
-        border-image: initial;
-        border-radius: 3px;
+      background-color: rgb(76, 175, 80);
+      color: white;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-width: initial;
+      border-style: none;
+      border-color: initial;
+      border-image: initial;
+      border-radius: 3px;
+    }
+
+    .footer {
+      background: #f9fafb;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+      font-size: 12px;
+      text-align: center;
+      color: #666;
+    }
+
+    .footer a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .heart {
+      color: #ff4d4d;
+    }
+
+    p {
+      margin: 0;
+      padding: 3px 0;
     }
   </style>
 </head>
@@ -52,8 +91,15 @@
   </select>
   <h3 class="section-header">Font family</h3>
   <input type="text" id="fontInput" placeholder="e.g., Arial, sans-serif">
-  <button id="saveButton">Save Settings</button>
+  <button id="saveButton">Save</button>
   <script src="popup.js"></script>
+</div>
+<div class="footer">
+  <p>Made with <span class="heart">&#9829;</span> by <a href="https://twitter.com/askNilan"
+                                                        target="_blank">Nilanchala</a></p>
+  <p>Love this extension? <a href="https://github.com/nilandev/json-formatter-extenson"
+                             target="_blank">Contribute on GitHub</a></p>
+  <p style="padding-bottom: 20px">Thank you for using JSON Formatter!</p>
 </div>
 </body>
 </html>

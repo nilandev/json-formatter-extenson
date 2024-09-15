@@ -55,12 +55,14 @@
 
 #json-copy-button,
 #json-expand-all-button,
+#json-export-csv-button,
 #json-toggle-view-button {
   background-color: #444;
   border-color: #333333;
 }
 
 #json-copy-button:hover,
+#json-export-csv-button:hover,
 #json-expand-all-button:hover,
 #json-toggle-view-button:hover {
   background-color: #333333;
@@ -109,4 +111,66 @@
 
 .view-button:hover:not(.active) {
   background-color: #ffffff;
+}
+
+
+#json-formatter-toast {
+  position: fixed;
+  top: 52px;
+  right: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 200px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 10px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Adjust the toast colors based on the current theme */
+.github-dark-theme #json-formatter-toast {
+  background-color: #333;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme #json-formatter-toast {
+  background-color: #333;
+  color: #fff;
+}
+
+.light-theme #json-formatter-toast {
+  color: #2b3038;
+  background: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+}
+
+.light-theme .toast-close {
+  color: #333;
 }
