@@ -5,15 +5,14 @@
     "default_locale": "en",
     "homepage_url": "https://stacktips.com,",
     "description": "Formats JSON responses automatically with customizable themes and JSONPath filtering support.",
+    "author":  "ask.nilan@gmail.com",
     "permissions": [
         "activeTab",
         "storage",
         "clipboardWrite",
         "downloads"
     ],
-    "author": {
-        "email": "ask.nilan@gmail.com"
-    },
+
     "action": {
         "default_popup": "popup.html",
         "default_icon": "icons/icon48.png"
