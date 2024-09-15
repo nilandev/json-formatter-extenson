@@ -2,7 +2,6 @@
     "manifest_version": 3,
     "name": "JSON Formatter",
     "version": "1.0",
-    "default_locale": "en",
     "homepage_url": "https://stacktips.com,",
     "description": "Formats JSON responses automatically with customizable themes and JSONPath filtering support.",
     "author":  "ask.nilan@gmail.com",
