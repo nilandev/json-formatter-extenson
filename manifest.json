@@ -6,10 +6,8 @@
     "description": "Formats JSON responses automatically with customizable themes and JSONPath filtering support.",
     "author":  "ask.nilan@gmail.com",
     "permissions": [
-        "activeTab",
         "storage",
-        "clipboardWrite",
-        "downloads"
+        "clipboardWrite"
     ],
 
     "action": {
