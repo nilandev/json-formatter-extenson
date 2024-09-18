@@ -19,12 +19,12 @@
             "matches": ["<all_urls>"],
             "js": [
                 "JSONPath/index-browser-umd.min.cjs",
-                "json-formatter.umd.js",
-                "content.js"
+                "src/json-formatter.umd.js",
+                "src/content.js"
             ],
             "css": [
-                "json-formatter.css",
-                "filter-styles.css",
+                "styles/json-formatter.css",
+                "styles/filter-styles.css",
                 "themes/dark.css",
                 "themes/light.css",
                 "themes/github-dark.css"

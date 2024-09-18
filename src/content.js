@@ -24,8 +24,8 @@ function isJSONString(str) {
 
 function formatJSON(theme, fontFamily) {
     if (document.contentType === 'application/json' ||
-        (document.contentType === 'text/plain' && isJSONString(document.body.textContent))) {
-        originalContent = document.body.textContent;
+        (document.contentType === 'text/plain' && isJSONString(document.body.firstChild.textContent))) {
+        originalContent = document.body.firstChild.textContent;
         try {
             jsonObj = JSON.parse(originalContent);
             document.body.innerHTML = '';
@@ -361,9 +361,11 @@ chrome.storage.sync.get(['theme', 'fontFamily'], function(data) {
     formatJSON(currentTheme, currentFontFamily);
 });
 
-// Listen for settings update messages
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log("Received message from popup.js:", request);
+
+    // Listen for settings update messages
     if (request.action === "updateSettings") {
         if (request.theme) {
             currentTheme = request.theme;
