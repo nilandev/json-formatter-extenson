@@ -1,6 +1,11 @@
 #json-container {
-  padding: 10px;
   font-family: inherit; /* Use the font set by JavaScript */
+  padding: 12px;
+}
+
+#headers-view {
+  font-family: inherit; /* Use the font set by JavaScript */
+  padding: 12px;
 }
 
 pre {

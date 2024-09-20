@@ -1,36 +1,32 @@
-let currentTheme = 'dark';
+let currentTheme = 'light';
 let currentFontFamily = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
 let jsonObj = null;
 let originalContent = null;
 let isFlatView = false;
 let isExpandedAll = false;
 let filteredJsonObj = null;
+let currentHeaders = {
+    request: {},
+    response: {}
+};
 
-function initializeExtension() {
-    chrome.storage.sync.get(['theme', 'fontFamily'], function(data) {
-        currentTheme = data.theme || 'github-dark';
-        currentFontFamily = data.fontFamily || 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
-    });
-}
-
-function isJSONString(str) {
-    try {
-        JSON.parse(str);
-        return true;
-    } catch (e) {
-        return false;
-    }
-}
-
-function formatJSON(theme, fontFamily) {
+function init() {
     if (document.contentType === 'application/json' ||
         (document.contentType === 'text/plain' && isJSONString(document.body.firstChild.textContent))) {
+
+        chrome.storage.sync.get(['theme', 'fontFamily'], function(data) {
+            currentTheme = data.theme || 'light';
+            currentFontFamily = data.fontFamily || 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
+            applyThemeAndFont(currentTheme, currentFontFamily);
+        });
+
         originalContent = document.body.firstChild.textContent;
         try {
             jsonObj = JSON.parse(originalContent);
             document.body.innerHTML = '';
-            renderJSON(jsonObj, theme, fontFamily);
             addFilterUI();
+            renderJSON(jsonObj, currentTheme, currentFontFamily);
+            renderHeaders();
         } catch (e) {
             console.error("Error formatting JSON:", e);
         }
@@ -42,18 +38,25 @@ function applyThemeAndFont(theme, fontFamily) {
     document.body.style.fontFamily = fontFamily;
 }
 
+function isJSONString(str) {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 function renderJSON(obj, theme, fontFamily) {
     const existingContainer = document.getElementById('json-container');
-    if (existingContainer) {
-        existingContainer.remove();
-    }
 
-    const jsonContainer = document.createElement('div');
-    jsonContainer.id = 'json-container';
+    //remove all child nodes, before adding new ones
+    existingContainer.childNodes.forEach(child => child.remove());
+
     if (isFlatView) {
-        jsonContainer.appendChild(renderFlatJSON(obj));
+        existingContainer.appendChild(renderFlatJSON(obj));
     } else {
-        const formatter = new JSONFormatter(obj, isExpandedAll ? Infinity : 3, {
+        const formatter = new JSONFormatter(obj, isExpandedAll ? Infinity : 1, {
             hoverPreviewEnabled: false,
             hoverPreviewArrayCount: 200,
             hoverPreviewFieldCount: 10,
@@ -61,10 +64,13 @@ function renderJSON(obj, theme, fontFamily) {
             animateOpen: true,
             animateClose: true
         });
-        jsonContainer.appendChild(formatter.render());
+        existingContainer.appendChild(formatter.render());
     }
-    document.body.appendChild(jsonContainer);
-    applyThemeAndFont(theme, fontFamily);
+}
+
+function collapseAll() {
+    isExpandedAll = false;
+    renderJSON(jsonObj, currentTheme, currentFontFamily);
 }
 
 function expandAll() {
@@ -78,6 +84,41 @@ function renderFlatJSON(obj) {
     return pre;
 }
 
+function renderNavigation() {
+    return `
+      <div class="tab-container">
+        <button id="json-tab" class="tab-button active">JSON</button>
+        <button id="headers-tab" class="tab-button">Headers</button>
+      </div>
+      <div id="json-view" class="tab-content active">
+        <div id="json-filter-container">
+          <div class="header-row">
+            <div id="json-view-switch">
+              <button id="json-foldable-view-button" class="view-button ${!isFlatView ? 'active' : ''}">Tree</button>
+              <button id="json-flat-view-button" class="view-button ${isFlatView ? 'active' : ''}">Flat</button>
+            </div>
+            <button id="json-expand-all-button" class="header-button">Expand All</button>
+            <button id="json-collapse-all-button" class="header-button">Collapse All</button>
+            <button id="json-copy-button" class="header-button">Copy</button>
+            <button id="json-export-csv-button" class="header-button">Export CSV</button>
+          </div>
+          <div class="header-row">
+            <input type="text" id="json-filter-input" placeholder="Enter JSONPath (e.g., $.store.book[*].author)">
+            <button id="json-filter-button" class="header-button">Filter</button>
+            <button id="json-clear-button" class="header-button">Clear</button>
+            <button id="json-filter-help-button" class="header-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </button>
+          </div>
+        </div>
+        <div id="json-container"></div>
+      </div>
+      <div id="headers-view" class="tab-content">
+        <div id="headers-container"></div>
+      </div>
+  `;
+}
+
 function addFilterUI() {
     const existingFilterContainer = document.getElementById('json-filter-container');
     if (existingFilterContainer) {
@@ -85,25 +126,12 @@ function addFilterUI() {
     }
 
     const filterContainer = document.createElement('div');
-    filterContainer.id = 'json-filter-container';
-    filterContainer.innerHTML = `
-
-    <input type="text" id="json-filter-input" placeholder="Enter JSONPath (e.g., $.store.book[*].author)">
-    <button id="json-filter-button">Filter</button>
-    <button id="json-clear-button" class="view-button">Clear</button>
-    <div id="json-view-switch">
-      <button id="json-foldable-view-button" class="view-button ${!isFlatView ? 'active' : ''}">Tree</button>
-      <button id="json-flat-view-button" class="view-button ${isFlatView ? 'active' : ''}">Flat</button>
-    </div>
-    <button id="json-expand-all-button">Expand All</button>
-    <button id="json-copy-button">Copy</button>
-    <button id="json-export-csv-button">Export CSV</button>
-     <button id="json-filter-help-button">
-       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-     </button>
-  `;
+    filterContainer.id = 'json-formatter-container';
+    filterContainer.innerHTML = renderNavigation();
     document.body.insertBefore(filterContainer, document.body.firstChild);
 
+    document.getElementById('json-tab').addEventListener('click', () => switchTab('json'));
+    document.getElementById('headers-tab').addEventListener('click', () => switchTab('headers'));
     document.getElementById('json-filter-button').addEventListener('click', performFilter);
     document.getElementById('json-clear-button').addEventListener('click', clearFilter);
     document.getElementById('json-foldable-view-button').addEventListener('click', () => switchView(false));
@@ -112,11 +140,38 @@ function addFilterUI() {
     document.getElementById('json-export-csv-button').addEventListener('click', exportFilteredToCSV);
     document.getElementById('json-filter-help-button').addEventListener('click', showFilterHelp);
     document.getElementById('json-expand-all-button').addEventListener('click', expandAll);
+    document.getElementById('json-collapse-all-button').addEventListener('click', collapseAll); // New event
     document.getElementById('json-filter-input').addEventListener('keyup', function(event) {
         if (event.key === 'Enter') {
             performFilter();
         }
     });
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    document.getElementById(`${tabName}-view`).classList.add('active');
+}
+
+function renderHeaders() {
+    const headersContainer = document.getElementById('headers-container');
+    if (currentHeaders) {
+        let headersHTML = '<h3>Request Headers</h3><ul>';
+        for (const [key, value] of Object.entries(currentHeaders.request)) {
+            headersHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+        }
+        headersHTML += '</ul><h3>Response Headers</h3><ul>';
+        for (const [key, value] of Object.entries(currentHeaders.response)) {
+            headersHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+        }
+        headersHTML += '</ul>';
+        headersContainer.innerHTML = headersHTML;
+    } else {
+        headersContainer.innerHTML = '<p>No headers available.</p>';
+    }
 }
 
 function performFilter() {
@@ -140,24 +195,7 @@ function performFilter() {
     }
 }
 
-function getFilenameFromUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        let filename = urlObj.pathname.split('/').pop() || urlObj.hostname;
 
-        // Remove file extension if present
-        filename = filename.split('.').slice(0, -1).join('.') || filename;
-
-        // Remove any special characters that are invalid in filenames
-        filename = filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-
-        // Ensure the filename isn't empty and add a default if it is
-        return filename || 'json_data';
-    } catch (error) {
-        console.error('Error parsing URL:', error);
-        return 'json_data';
-    }
-}
 
 function exportFilteredToCSV() {
     if (filteredJsonObj) {
@@ -166,116 +204,6 @@ function exportFilteredToCSV() {
         exportToCSV(jsonObj);
     }
 }
-
-function exportToCSV(data, filenamePrefix = '') {
-    let items = Array.isArray(data) ? data[0] : [data];
-    const blob = new Blob([jsonToCsv(items)], { type: 'text/csv;charset=utf-8;' });
-    const pageUrl = window.location.href;
-    const baseFilename = getFilenameFromUrl(pageUrl);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `${baseFilename}${filenamePrefix}_${timestamp}.csv`;
-    saveFile(blob, filename);
-}
-
-function saveFile(blob, filename) {
-    if (window.navigator.msSaveOrOpenBlob) {
-        window.navigator.msSaveOrOpenBlob(blob, filename);
-    } else {
-        const a = document.createElement('a');
-        document.body.appendChild(a);
-        const url = window.URL.createObjectURL(blob);
-        a.href = url;
-        a.download = filename;
-        a.click();
-        setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }, 0)
-    }
-}
-
-function exportToCSV2(data, filename = 'export.csv') {
-    let items = Array.isArray(data) ? data[0] : [data];
-
-    const blob = new Blob([jsonToCsv(items)], { type: 'text/csv;charset=utf-8;' });
-    if (navigator.msSaveBlob) {
-        navigator.msSaveBlob(blob, filename);
-    } else {
-        const link = document.createElement('a');
-        if (link.download !== undefined) {
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    }
-}
-
-function jsonToCsv(jsonData) {
-    let headers = new Set();
-    let rows = [];
-
-    // Helper function to sanitize multi-line strings
-    function sanitizeString(value) {
-        if (typeof value === 'string') {
-            return value.replace(/[\n\r]+/g, ' ').replace(/"/g, '""');
-        } else if (Array.isArray(value)) {
-            return value.join('; ');  // Join array elements with semicolon or any other separator
-        } else if (typeof value === 'object') {
-            return JSON.stringify(value);
-        }
-        return value;
-    }
-
-    // Recursive function to flatten nested JSON objects
-    function flattenObject(obj, parentKey = '') {
-        let flatObject = {};
-
-        for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                let fullKey = parentKey ? `${parentKey}.${key}` : key;
-
-                // If the value is an object, recurse, otherwise add the value
-                if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-                    Object.assign(flatObject, flattenObject(obj[key], fullKey));
-                } else {
-                    flatObject[fullKey] = sanitizeString(obj[key]);
-                    headers.add(fullKey);  // Collect headers dynamically
-                }
-            }
-        }
-
-        return flatObject;
-    }
-
-    // Handle both array of objects or single object
-    let jsonArray = Array.isArray(jsonData) ? jsonData : [jsonData];
-
-    // Flatten each object and store the result in rows
-    jsonArray.forEach((item) => {
-        rows.push(flattenObject(item));
-    });
-
-    // Convert headers Set to Array
-    let headerArray = Array.from(headers);
-
-    // Create CSV string with headers and rows
-    let csv = headerArray.join(',') + '\n';
-
-    rows.forEach(row => {
-        let rowArray = headerArray.map(header => {
-            // Ensure that each row has a value for each header (undefined if missing)
-            return row[header] !== undefined ? `"${row[header]}"` : '';
-        });
-        csv += rowArray.join(',') + '\n';
-    });
-
-    return csv;
-}
-
 
 function clearFilter() {
     document.getElementById('json-filter-input').value = '';
@@ -295,36 +223,6 @@ function copyJSON() {
     }).catch(err => {
         console.error('Failed to copy JSON: ', err);
     });
-}
-
-function showToast(message, duration = 3000) {
-    // Remove existing toast if any
-    const existingToast = document.getElementById('json-formatter-toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.id = 'json-formatter-toast';
-    toast.innerHTML = `
-    ${message}
-    <button class="toast-close">&times;</button>
-  `;
-
-    // Add toast to the page
-    document.body.appendChild(toast);
-
-    // Add click event to close button
-    const closeButton = toast.querySelector('.toast-close');
-    closeButton.addEventListener('click', () => {
-        toast.remove();
-    });
-
-    // Auto dismiss
-    setTimeout(() => {
-        toast.remove();
-    }, duration);
 }
 
 function switchView(toFlatView) {
@@ -355,16 +253,8 @@ function filterObject(obj, filter) {
     return Object.keys(result).length ? result : undefined;
 }
 
-chrome.storage.sync.get(['theme', 'fontFamily'], function(data) {
-    currentTheme = data.theme || 'dark';
-    currentFontFamily = data.fontFamily || 'monospace';
-    formatJSON(currentTheme, currentFontFamily);
-});
-
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("Received message from popup.js:", request);
-
     // Listen for settings update messages
     if (request.action === "updateSettings") {
         if (request.theme) {
@@ -374,8 +264,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             currentFontFamily = request.fontFamily;
         }
 
+        applyThemeAndFont(currentTheme, currentFontFamily)
         renderJSON(jsonObj, currentTheme, currentFontFamily);
     }
+
+    if (request.action === "updateHeaders") {
+        headers = request.headers;
+        console.log('Headers updated', headers);
+        renderHeaders();
+        sendResponse({status: "Headers updated successfully"});
+    }
+    return true; // Indicates that sendResponse will be called asynchronously
 });
 
-initializeExtension();
+init();

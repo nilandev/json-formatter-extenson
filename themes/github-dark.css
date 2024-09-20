@@ -5,7 +5,7 @@
 }
 
 .github-dark-theme .json-formatter-row {
-  font-size: 0.85rem;
+  /*font-size: 0.85rem;*/
 }
 
 .github-dark-theme .json-formatter-row > a > .json-formatter-bracket {
@@ -49,8 +49,8 @@
 }
 
 .github-dark-theme .json-formatter-row .json-formatter-toggler {
-  font-size: 0.85em;
-  line-height: 1.2em;
+  /*font-size: 0.85em;*/
+  /*line-height: 1.2em;*/
   vertical-align: middle;
   opacity: 0.6;
   cursor: pointer;
