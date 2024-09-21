@@ -1,6 +1,6 @@
 # JSON Formatter
 
-A Open-source Chrome extension that automatically transforms raw JSON data into a beautifully formatted, easy-to-read structure. If you're a developer, data analyst, or someone who frequently works with JSON, this tool is designed to make your life easier.
+An Open-source Chrome extension that automatically transforms raw JSON data into a beautifully formatted, easy-to-read structure. If you're a developer, data analyst, or someone who frequently works with JSON, this tool is designed to make your life easier.
 
 ![](https://raw.githubusercontent.com/nilandev/json-formatter-extenson/main/screenshots/large-promo.png)
 
