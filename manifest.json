@@ -9,9 +9,17 @@
     },
     "permissions": [
         "storage",
-        "clipboardWrite"
+        "clipboardWrite",
+        "webRequest",
+        "activeTab"
     ],
-
+    "host_permissions": [
+        "*://*/*"
+    ],
+    "background": {
+        "service_worker": "src/background.js",
+        "type": "module"
+    },
     "action": {
         "default_popup": "popup.html",
         "default_icon": "icons/icon48.png"
@@ -20,16 +28,19 @@
         {
             "matches": ["<all_urls>"],
             "js": [
-                "JSONPath/index-browser-umd.min.cjs",
+                "src/jsonpath/index-browser-umd.min.cjs",
                 "src/json-formatter.umd.js",
+                "src/alert.js",
+                "src/json-2-csv.js",
+                "src/file-manager.js",
+                "src/filter.js",
                 "src/content.js"
             ],
             "css": [
                 "styles/json-formatter.css",
                 "styles/filter-styles.css",
-                "themes/dark.css",
-                "themes/light.css",
-                "themes/github-dark.css"
+                "styles/themes/dark.css",
+                "styles/themes/light.css"
             ],
             "run_at": "document_end"
         }
