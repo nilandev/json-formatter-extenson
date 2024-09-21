@@ -3,18 +3,20 @@ let currentFontFamily = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Cou
 let jsonObj = null;
 let originalContent = null;
 let isFlatView = false;
-let isExpandedAll = false;
+let isExpandedAll = true;
 let filteredJsonObj = null;
 let currentHeaders = {
     request: [],
     response: []
 };
+let filterExpression = '';
+let filterType = 'jsonpath';
 
 function init() {
     if (document.contentType === 'application/json' ||
         (document.contentType === 'text/plain' && isJSONString(document.body.firstChild.textContent))) {
 
-        chrome.storage.sync.get(['theme', 'fontFamily'], function(data) {
+        chrome.storage.sync.get(['theme', 'fontFamily'], function (data) {
             currentTheme = data.theme || 'light';
             currentFontFamily = data.fontFamily || 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
             applyThemeAndFont(currentTheme, currentFontFamily);
@@ -70,12 +72,12 @@ function renderJSON(obj, theme, fontFamily) {
 
 function collapseAll() {
     isExpandedAll = false;
-    renderJSON(jsonObj, currentTheme, currentFontFamily);
+    renderJSON(filteredJsonObj == null ? jsonObj: filteredJsonObj, currentTheme, currentFontFamily);
 }
 
 function expandAll() {
     isExpandedAll = true;
-    renderJSON(jsonObj, currentTheme, currentFontFamily);
+    renderJSON(filteredJsonObj == null ? jsonObj: filteredJsonObj, currentTheme, currentFontFamily);
 }
 
 function renderFlatJSON(obj) {
@@ -94,24 +96,29 @@ function renderNavigation() {
       </div>
       <div id="json-view" class="tab-content active">
         <div id="json-filter-container">
-          <div class="header-row">
-            <input type="text" id="json-filter-input" placeholder="Enter JSONPath (e.g., $.store.book[*].author)">
-            <button id="json-filter-button" class="header-button">Filter</button>
-            <button id="json-clear-button" class="header-button">Clear</button>
-            <button id="json-filter-help-button" class="header-button" style="margin: 0 10px;padding: 0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </button>
-          </div>
-          
-           <div class="header-row">
+        
+        <div class="filter-container">
+          <div class="header-action-button-container">
+            <button id="json-download-button" class="header-button">Save</button>
+            <button id="json-copy-button" class="header-button">Copy</button>
+            <button id="json-expand-all-button" class="header-button">Expand</button>
+            <button id="json-collapse-all-button" class="header-button">Collapse</button>
             <div id="json-view-switch">
               <button id="json-foldable-view-button" class="view-button ${!isFlatView ? 'active' : ''}">Tree</button>
               <button id="json-flat-view-button" class="view-button ${isFlatView ? 'active' : ''}">Flat</button>
             </div>
-            <button id="json-expand-all-button" class="header-button">Expand All</button>
-            <button id="json-collapse-all-button" class="header-button">Collapse All</button>
-            <button id="json-copy-button" class="header-button">Copy</button>
-            <button id="json-download-button" class="header-button">Save</button>
+          </div>
+          <div class="search-filter-container">
+            <select id="filter-type-select">
+              <option value="keyvalue">Key:Value</option>
+              <option value="regex">Regex</option>
+              <option value="jsonpath">JSONPath</option>
+            </select>
+            <input type="text" id="json-filter-input" placeholder="Filter JSON">
+            </div>
+            <button id="json-filter-help-button" class="header-button" style="margin: 0 10px;padding: 0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </button>
           </div>
         </div>
         <div id="json-container"></div>
@@ -143,8 +150,6 @@ function addFilterUI() {
     document.getElementById('json-tab').addEventListener('click', () => switchTab('json'));
     document.getElementById('raw-json-tab').addEventListener('click', () => switchTab('raw-json'));
     document.getElementById('headers-tab').addEventListener('click', () => switchTab('headers'));
-    document.getElementById('json-filter-button').addEventListener('click', performFilter);
-    document.getElementById('json-clear-button').addEventListener('click', clearFilter);
     document.getElementById('json-foldable-view-button').addEventListener('click', () => switchView(false));
     document.getElementById('json-flat-view-button').addEventListener('click', () => switchView(true));
     document.getElementById('json-copy-button').addEventListener('click', copyJSON);
@@ -152,7 +157,7 @@ function addFilterUI() {
     document.getElementById('json-filter-help-button').addEventListener('click', showFilterHelp);
     document.getElementById('json-expand-all-button').addEventListener('click', expandAll);
     document.getElementById('json-collapse-all-button').addEventListener('click', collapseAll); // New event
-    document.getElementById('json-filter-input').addEventListener('keyup', function(event) {
+    document.getElementById('json-filter-input').addEventListener('keyup', function (event) {
         if (event.key === 'Enter') {
             performFilter();
         }
@@ -213,28 +218,26 @@ function renderHeaders() {
     }
 }
 
-
 function performFilter() {
-    const filterExpression = document.getElementById('json-filter-input').value;
-    console.log('Attempting to filter with expression:', filterExpression);
-
-    try {
-        filteredJsonObj = JSONPath.JSONPath({path: filterExpression, json: jsonObj});
-        console.log('Filtered result:', filteredJsonObj);
-
-        if (filteredJsonObj === undefined || filteredJsonObj === null) {
-            alert('No results found for this JSONPath expression.');
-            return;
-        }
-
-        isExpandedAll = false; // Reset expansion state
-        renderJSON(filteredJsonObj, currentTheme, currentFontFamily);
-    } catch (error) {
-        console.error('JSONPath filtering error:', error);
-        alert(`Invalid JSONPath syntax: ${error.message}. Please check your syntax.`);
+    filterExpression = document.getElementById('json-filter-input').value;
+    if(filterExpression === '') {
+        clearFilter();
+        return; // No need to filter
     }
-}
 
+    filterType = document.getElementById('filter-type-select').value;
+    filteredJsonObj = filterJsonObject(jsonObj, filterExpression.toLowerCase());
+    if (!Array.isArray(filteredJsonObj)) {
+        filteredJsonObj = [filteredJsonObj];
+    }
+
+    filteredJsonObj = filteredJsonObj.filter(item => item != null);
+    if (filteredJsonObj.length === 0) {
+        alert('No results found for this filter expression.');
+        return;
+    }
+    renderJSON(filteredJsonObj, currentTheme, currentFontFamily);
+}
 
 
 function downloadJson() {
@@ -243,7 +246,8 @@ function downloadJson() {
 
 function clearFilter() {
     document.getElementById('json-filter-input').value = '';
-    isExpandedAll = false;
+    filterExpression = '';
+    filteredJsonObj = null;
     renderJSON(jsonObj, currentTheme, currentFontFamily);
 }
 
@@ -260,7 +264,6 @@ function copyJSON() {
         console.error('Failed to copy JSON: ', err);
     });
 }
-
 
 
 function filterObject(obj, filter) {
