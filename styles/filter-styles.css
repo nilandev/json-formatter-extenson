@@ -1,73 +1,7 @@
-/*#json-filter-container {*/
-/*  z-index: 1000;*/
-/*  background-color: #f2f2f2;*/
-/*  padding: 12px;*/
-/*  display: flex;*/
-/*  gap: 8px;*/
-/*  font-family: inherit; !* Use the font set by JavaScript *!*/
-/*  flex-wrap: wrap;*/
-/*  align-items: center;*/
-/*}*/
-
-/*#json-filter-input {
-  width: 60%;
-  border: 1px solid #ccc;
-  padding: 5px 10px;
-  border-radius: 3px;
-  background: #ffffff;
-  margin: 0;
-}*/
-
 .json-formatter-row {
   font-family: inherit !important; /* Use the font set by JavaScript */
   font-size: 0.9rem;
 }
-
-
-/*#json-filter-button,
-#json-clear-button,
-#json-copy-button,
-#json-expand-all-button,
-#json-toggle-view-button,
-#json-export-csv-button
-{
-  padding: 5px 10px;
-  background-color: #4CAF50;
-  color: white;
-  border-radius: 3px;
-  cursor: pointer;
-  border: 1px solid #439d47;
-}
-
-#json-filter-button:hover {
-  background-color: #45a049;
-}
-
-#json-clear-button {
-  background-color: #f44336;
-  margin-right: 20px;
-  border-color: #de3c31;
-}
-
-#json-clear-button:hover {
-  background-color: #d32f2f;
-}
-
-#json-copy-button,
-#json-expand-all-button,
-#json-export-csv-button,
-#json-toggle-view-button {
-  background-color: #444;
-  border-color: #333333;
-}
-
-#json-copy-button:hover,
-#json-export-csv-button:hover,
-#json-expand-all-button:hover,
-#json-toggle-view-button:hover {
-  background-color: #333333;
-}*/
-
 #json-filter-help-button {
   background: none;
   border: none;
@@ -79,40 +13,6 @@
 #json-filter-help-button:hover {
   transform: scale(1.15);
 }
-
-
-
-/*#json-view-switch {
-  display: flex;
-}*/
-/*.view-button {
-  padding: 5px 10px;
-  background-color: #ffffff;
-  color: #333;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
-}*/
-
-/*.view-button:first-child {
-  border-radius: 3px 0 0 3px;
-  border-right: none;
-}
-.view-button:last-child {
-  border-radius: 0 3px 3px 0;
-  border-left: 0;
-}*/
-
-/*.view-button.active {
-  background-color: #444;
-  color: white;
-  border-color: #444;
-}*/
-
-/*.view-button:hover:not(.active) {
-  background-color: #ffffff;
-}*/
-
 
 #json-formatter-toast {
   position: fixed;
@@ -153,12 +53,6 @@
 }
 
 /* Adjust the toast colors based on the current theme */
-.github-dark-theme #json-formatter-toast {
-  background-color: #333;
-  color: #fff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
 .dark-theme #json-formatter-toast {
   background-color: #333;
   color: #fff;

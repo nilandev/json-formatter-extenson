@@ -1,4 +1,4 @@
-window.exportToCSV = function (data, filenamePrefix = '') {
+window.exportJson = function (data, filenamePrefix = '') {
 
   function saveFile(blob, filename) {
     if (window.navigator.msSaveOrOpenBlob) {
@@ -36,12 +36,17 @@ window.exportToCSV = function (data, filenamePrefix = '') {
     }
   }
 
-  let items = Array.isArray(data) ? data[0] : [data];
-  const blob = new Blob([jsonToCsv(items)], {type: 'text/csv;charset=utf-8;'});
+  // Convert JSON data to a string
+  const jsonString = JSON.stringify(data, null, 2);
+
+  // Create a Blob with the JSON string
+  const blob = new Blob([jsonString], { type: 'application/json' });
+
+  // Create a URL for the Blob
   const pageUrl = window.location.href;
   const baseFilename = getFilenameFromUrl(pageUrl);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filename = `${baseFilename}${filenamePrefix}_${timestamp}.csv`;
+  const filename = `${baseFilename}${filenamePrefix}_${timestamp}.json`;
   saveFile(blob, filename);
 
 }

@@ -6,8 +6,8 @@ let isFlatView = false;
 let isExpandedAll = false;
 let filteredJsonObj = null;
 let currentHeaders = {
-    request: {},
-    response: {}
+    request: [],
+    response: []
 };
 
 function init() {
@@ -80,6 +80,7 @@ function expandAll() {
 
 function renderFlatJSON(obj) {
     const pre = document.createElement('pre');
+    pre.className = 'raw-json';
     pre.textContent = JSON.stringify(obj, null, 2);
     return pre;
 }
@@ -88,11 +89,21 @@ function renderNavigation() {
     return `
       <div class="tab-container">
         <button id="json-tab" class="tab-button active">JSON</button>
+        <button id="raw-json-tab" class="tab-button">Raw</button>
         <button id="headers-tab" class="tab-button">Headers</button>
       </div>
       <div id="json-view" class="tab-content active">
         <div id="json-filter-container">
           <div class="header-row">
+            <input type="text" id="json-filter-input" placeholder="Enter JSONPath (e.g., $.store.book[*].author)">
+            <button id="json-filter-button" class="header-button">Filter</button>
+            <button id="json-clear-button" class="header-button">Clear</button>
+            <button id="json-filter-help-button" class="header-button" style="margin: 0 10px;padding: 0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </button>
+          </div>
+          
+           <div class="header-row">
             <div id="json-view-switch">
               <button id="json-foldable-view-button" class="view-button ${!isFlatView ? 'active' : ''}">Tree</button>
               <button id="json-flat-view-button" class="view-button ${isFlatView ? 'active' : ''}">Flat</button>
@@ -100,21 +111,20 @@ function renderNavigation() {
             <button id="json-expand-all-button" class="header-button">Expand All</button>
             <button id="json-collapse-all-button" class="header-button">Collapse All</button>
             <button id="json-copy-button" class="header-button">Copy</button>
-            <button id="json-export-csv-button" class="header-button">Export CSV</button>
-          </div>
-          <div class="header-row">
-            <input type="text" id="json-filter-input" placeholder="Enter JSONPath (e.g., $.store.book[*].author)">
-            <button id="json-filter-button" class="header-button">Filter</button>
-            <button id="json-clear-button" class="header-button">Clear</button>
-            <button id="json-filter-help-button" class="header-button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </button>
+            <button id="json-download-button" class="header-button">Save</button>
           </div>
         </div>
         <div id="json-container"></div>
       </div>
+      <div id="raw-json-view" class="tab-content">
+        <div class="scroll-wrapper">
+          <pre class="raw-json">${originalContent}</pre>
+          </div>
+      </div>
       <div id="headers-view" class="tab-content">
-        <div id="headers-container"></div>
+        <div class="scroll-wrapper">
+          <div id="headers-container"></div>
+        </div>
       </div>
   `;
 }
@@ -131,13 +141,14 @@ function addFilterUI() {
     document.body.insertBefore(filterContainer, document.body.firstChild);
 
     document.getElementById('json-tab').addEventListener('click', () => switchTab('json'));
+    document.getElementById('raw-json-tab').addEventListener('click', () => switchTab('raw-json'));
     document.getElementById('headers-tab').addEventListener('click', () => switchTab('headers'));
     document.getElementById('json-filter-button').addEventListener('click', performFilter);
     document.getElementById('json-clear-button').addEventListener('click', clearFilter);
     document.getElementById('json-foldable-view-button').addEventListener('click', () => switchView(false));
     document.getElementById('json-flat-view-button').addEventListener('click', () => switchView(true));
     document.getElementById('json-copy-button').addEventListener('click', copyJSON);
-    document.getElementById('json-export-csv-button').addEventListener('click', exportFilteredToCSV);
+    document.getElementById('json-download-button').addEventListener('click', downloadJson);
     document.getElementById('json-filter-help-button').addEventListener('click', showFilterHelp);
     document.getElementById('json-expand-all-button').addEventListener('click', expandAll);
     document.getElementById('json-collapse-all-button').addEventListener('click', collapseAll); // New event
@@ -148,31 +159,60 @@ function addFilterUI() {
     });
 }
 
+function switchView(toFlatView) {
+    if (isFlatView !== toFlatView) {
+        isFlatView = toFlatView;
+        document.getElementById('json-foldable-view-button').classList.toggle('active', !isFlatView);
+        document.getElementById('json-flat-view-button').classList.toggle('active', isFlatView);
+        renderJSON(jsonObj, currentTheme, currentFontFamily);
+    }
+}
+
+
 function switchTab(tabName) {
     document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
     document.getElementById(`${tabName}-tab`).classList.add('active');
     document.getElementById(`${tabName}-view`).classList.add('active');
 }
 
+
 function renderHeaders() {
+    console.log('Rendering headers', currentHeaders);
     const headersContainer = document.getElementById('headers-container');
-    if (currentHeaders) {
-        let headersHTML = '<h3>Request Headers</h3><ul>';
-        for (const [key, value] of Object.entries(currentHeaders.request)) {
-            headersHTML += `<li><strong>${key}:</strong> ${value}</li>`;
-        }
-        headersHTML += '</ul><h3>Response Headers</h3><ul>';
-        for (const [key, value] of Object.entries(currentHeaders.response)) {
-            headersHTML += `<li><strong>${key}:</strong> ${value}</li>`;
-        }
-        headersHTML += '</ul>';
+    if (currentHeaders && currentHeaders.request && currentHeaders.response) {
+        let headersHTML = '<h3 class="headerGroup">Response Headers</h3>';
+        headersHTML += '<table>';
+        headersHTML += '<tbody>';
+        currentHeaders.response.forEach(header => {
+            headersHTML += `
+                <tr>
+                    <td class="headerParamName">${header.name}</td>
+                    <td class="headerParamValue">${header.value}</td>
+                </tr>
+            `;
+        });
+        headersHTML += '</tbody></table>';
+
+        headersHTML += '<h3 class="headerGroup">Request Headers</h3>';
+        headersHTML += '<table>';
+        headersHTML += '<tbody>';
+        currentHeaders.request.forEach(header => {
+            headersHTML += `
+                <tr>
+                    <td class="headerParamName">${header.name}</td>
+                    <td class="headerParamValue">${header.value}</td>
+                </tr>
+            `;
+        });
+        headersHTML += '</tbody></table>';
+
         headersContainer.innerHTML = headersHTML;
     } else {
         headersContainer.innerHTML = '<p>No headers available.</p>';
     }
 }
+
 
 function performFilter() {
     const filterExpression = document.getElementById('json-filter-input').value;
@@ -197,12 +237,8 @@ function performFilter() {
 
 
 
-function exportFilteredToCSV() {
-    if (filteredJsonObj) {
-        exportToCSV(filteredJsonObj, '_filtered');
-    } else {
-        exportToCSV(jsonObj);
-    }
+function downloadJson() {
+    exportJson(jsonObj);
 }
 
 function clearFilter() {
@@ -225,14 +261,7 @@ function copyJSON() {
     });
 }
 
-function switchView(toFlatView) {
-    if (isFlatView !== toFlatView) {
-        isFlatView = toFlatView;
-        document.getElementById('json-foldable-view-button').classList.toggle('active', !isFlatView);
-        document.getElementById('json-flat-view-button').classList.toggle('active', isFlatView);
-        renderJSON(jsonObj, currentTheme, currentFontFamily);
-    }
-}
+
 
 function filterObject(obj, filter) {
     if (typeof obj !== 'object' || obj === null) {
@@ -269,8 +298,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     if (request.action === "updateHeaders") {
-        headers = request.headers;
-        console.log('Headers updated', headers);
+        currentHeaders = request.headers;
+        console.log('Headers updated', currentHeaders);
         renderHeaders();
         sendResponse({status: "Headers updated successfully"});
     }
