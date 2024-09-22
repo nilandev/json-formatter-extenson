@@ -37,6 +37,7 @@
                 "src/content.js"
             ],
             "css": [
+                "styles/json-grid.css",
                 "styles/json-formatter.css",
                 "styles/filter-styles.css",
                 "styles/themes/dark.css",

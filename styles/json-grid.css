@@ -1,0 +1,133 @@
+/* JSON Grid Container */
+#json-grid-container {
+    background-color: #ffffff;
+    max-width: 100%;
+    font-family: monospace;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    overflow: auto;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.json-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    border-bottom: 0;
+}
+
+/* Table Header */
+.json-grid th {
+    background-color: var(--nav2-bg-color);
+    color: #333;
+    font-weight: bold;
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #e0e0e0;
+    font-size: 0.9em;
+    letter-spacing: 0.05em;
+}
+
+/* Table Cells */
+.json-grid td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    transition: background-color 0.3s ease;
+}
+
+/* Ensure the last cell in each row does not have a right border */
+.json-grid tr th:last-child,
+.json-grid tr td:last-child {
+    border-right: none;
+}
+
+/* Expand Button */
+.expand-btn {
+    cursor: pointer;
+    color: var(--dark-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.expand-btn:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Nested Grid */
+.nested-grid {
+    margin-top: 10px;
+    margin-left: 20px;
+    border-left: 2px solid #007bff;
+    padding-left: 15px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 600px) {
+    .json-grid th, .json-grid td {
+        padding: 8px 10px;
+    }
+
+    .json-grid th {
+        font-size: 0.8em;
+    }
+
+    .expand-btn {
+        font-size: 0.9em;
+    }
+}
+
+/* Optional: Add some basic animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.json-grid {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.nested-grid {
+    animation: fadeIn 0.3s ease-out;
+}
+
+
+
+/* Expandable Container */
+.expandable-container {
+    display: flex;
+    align-items: center;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 5px 5px 0;
+    transition: color 0.3s ease;
+}
+
+
+.toggle-btn.rotated {
+    transform: rotate(90deg);
+}
+
+.toggle-btn:hover {
+    color: var(--primary-color);
+}
+
+.nested-grid {
+    margin-top: 10px;
+    border-left: 2px solid var(--primary-color);
+    margin-left: 8px;
+    padding-left: 0;
+
+}

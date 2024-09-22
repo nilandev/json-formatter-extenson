@@ -110,6 +110,7 @@
     z-index: 1;
     padding: 0 5px;
     margin: 2px 0;
+    outline: none;
 }
 
 #json-filter-input {

@@ -28,7 +28,7 @@
   color: var(--text-color);
   display: flex;
   border-bottom: 1px solid var(--border-color);
-  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: var(--system-font), serif;
 }
 
 .tab-button {
@@ -246,7 +246,7 @@ pre {
   overflow-y: scroll;
   overflow-x: hidden;
   width: 100%;
-  top: 30px;
+  top: 26px;
   bottom: 0;
 }
 

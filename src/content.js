@@ -2,7 +2,8 @@ let currentTheme = 'light';
 let currentFontFamily = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
 let jsonObj = null;
 let originalContent = null;
-let isFlatView = false;
+let jsonViewType = 'tree';
+
 let isExpandedAll = true;
 let filteredJsonObj = null;
 let currentHeaders = {
@@ -27,7 +28,7 @@ function init() {
             jsonObj = JSON.parse(originalContent);
             document.body.innerHTML = '';
             addFilterUI();
-            renderJSON(jsonObj, currentTheme, currentFontFamily);
+            renderJSON(currentTheme, currentFontFamily);
             renderHeaders();
         } catch (e) {
             console.error("Error formatting JSON:", e);
@@ -49,35 +50,45 @@ function isJSONString(str) {
     }
 }
 
-function renderJSON(obj, theme, fontFamily) {
-    const existingContainer = document.getElementById('json-container');
+function renderJSON(theme, fontFamily) {
+    obj= filteredJsonObj == null ? jsonObj: filteredJsonObj;
 
     //remove all child nodes, before adding new ones
+    const existingContainer = document.getElementById('json-container');
     existingContainer.childNodes.forEach(child => child.remove());
 
-    if (isFlatView) {
-        existingContainer.appendChild(renderFlatJSON(obj));
-    } else {
-        const formatter = new JSONFormatter(obj, isExpandedAll ? Infinity : 1, {
-            hoverPreviewEnabled: false,
-            hoverPreviewArrayCount: 200,
-            hoverPreviewFieldCount: 10,
-            theme: theme,
-            animateOpen: true,
-            animateClose: true
-        });
-        existingContainer.appendChild(formatter.render());
+    switch (jsonViewType) {
+        case "tree":
+            const formatter = new JSONFormatter(obj, isExpandedAll ? Infinity : 1, {
+                hoverPreviewEnabled: false,
+                hoverPreviewArrayCount: 200,
+                hoverPreviewFieldCount: 10,
+                theme: theme,
+                animateOpen: true,
+                animateClose: true
+            });
+            existingContainer.appendChild(formatter.render());
+            break;
+        case "grid":
+            const jsonGrid = document.createElement('div');
+            jsonGrid.id = 'json-grid-container';
+            createJsonGrid(obj, jsonGrid);
+            existingContainer.appendChild(jsonGrid);
+            break;
+        case "flat":
+            existingContainer.appendChild(renderFlatJSON(obj));
+            break;
     }
 }
 
 function collapseAll() {
     isExpandedAll = false;
-    renderJSON(filteredJsonObj == null ? jsonObj: filteredJsonObj, currentTheme, currentFontFamily);
+    renderJSON(currentTheme, currentFontFamily);
 }
 
 function expandAll() {
     isExpandedAll = true;
-    renderJSON(filteredJsonObj == null ? jsonObj: filteredJsonObj, currentTheme, currentFontFamily);
+    renderJSON(currentTheme, currentFontFamily);
 }
 
 function renderFlatJSON(obj) {
@@ -104,8 +115,9 @@ function renderNavigation() {
             <button id="json-expand-all-button" class="header-button">Expand</button>
             <button id="json-collapse-all-button" class="header-button">Collapse</button>
             <div id="json-view-switch">
-              <button id="json-foldable-view-button" class="view-button ${!isFlatView ? 'active' : ''}">Tree</button>
-              <button id="json-flat-view-button" class="view-button ${isFlatView ? 'active' : ''}">Flat</button>
+              <button id="json-tree-view-button" class="view-button active">Tree</button>
+              <button id="json-grid-view-button" class="view-button">Grid</button>
+              <button id="json-flat-view-button" class="view-button">Text</button>
             </div>
           </div>
           <div class="search-filter-container">
@@ -126,7 +138,7 @@ function renderNavigation() {
       <div id="raw-json-view" class="tab-content">
         <div class="scroll-wrapper">
           <pre class="raw-json">${originalContent}</pre>
-          </div>
+        </div>
       </div>
       <div id="headers-view" class="tab-content">
         <div class="scroll-wrapper">
@@ -150,8 +162,11 @@ function addFilterUI() {
     document.getElementById('json-tab').addEventListener('click', () => switchTab('json'));
     document.getElementById('raw-json-tab').addEventListener('click', () => switchTab('raw-json'));
     document.getElementById('headers-tab').addEventListener('click', () => switchTab('headers'));
-    document.getElementById('json-foldable-view-button').addEventListener('click', () => switchView(false));
-    document.getElementById('json-flat-view-button').addEventListener('click', () => switchView(true));
+
+    document.getElementById('json-tree-view-button').addEventListener('click', () => switchView("tree"));
+    document.getElementById('json-flat-view-button').addEventListener('click', () => switchView("flat"));
+    document.getElementById('json-grid-view-button').addEventListener('click', () => switchView("grid"));
+
     document.getElementById('json-copy-button').addEventListener('click', copyJSON);
     document.getElementById('json-download-button').addEventListener('click', downloadJson);
     document.getElementById('json-filter-help-button').addEventListener('click', showFilterHelp);
@@ -164,13 +179,14 @@ function addFilterUI() {
     });
 }
 
-function switchView(toFlatView) {
-    if (isFlatView !== toFlatView) {
-        isFlatView = toFlatView;
-        document.getElementById('json-foldable-view-button').classList.toggle('active', !isFlatView);
-        document.getElementById('json-flat-view-button').classList.toggle('active', isFlatView);
-        renderJSON(jsonObj, currentTheme, currentFontFamily);
-    }
+function switchView(viewName) {
+    jsonViewType = viewName;
+    console.log("Switching view to", viewName);
+
+    document.querySelectorAll('.view-button')
+        .forEach(button => button.classList.remove('active'));
+    document.getElementById(`json-${viewName}-view-button`).classList.add('active');
+    renderJSON(currentTheme, currentFontFamily);
 }
 
 
@@ -236,7 +252,7 @@ function performFilter() {
         alert('No results found for this filter expression.');
         return;
     }
-    renderJSON(filteredJsonObj, currentTheme, currentFontFamily);
+    renderJSON(currentTheme, currentFontFamily);
 }
 
 
@@ -248,7 +264,7 @@ function clearFilter() {
     document.getElementById('json-filter-input').value = '';
     filterExpression = '';
     filteredJsonObj = null;
-    renderJSON(jsonObj, currentTheme, currentFontFamily);
+    renderJSON(currentTheme, currentFontFamily);
 }
 
 function showFilterHelp() {
@@ -297,7 +313,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         applyThemeAndFont(currentTheme, currentFontFamily)
-        renderJSON(jsonObj, currentTheme, currentFontFamily);
+        renderJSON(currentTheme, currentFontFamily);
     }
 
     if (request.action === "updateHeaders") {
@@ -308,5 +324,107 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     return true; // Indicates that sendResponse will be called asynchronously
 });
+
+
+
+function createJsonGrid(jsonData, container) {
+    container.innerHTML = ''; // Clear the container
+    if (Array.isArray(jsonData)) {
+        createArrayGrid(jsonData, container);
+    } else if (typeof jsonData === 'object' && jsonData !== null) {
+        createObjectGrid(jsonData, container);
+    } else {
+        container.textContent = JSON.stringify(jsonData);
+    }
+}
+
+function createArrayGrid(jsonArray, container) {
+    const table = document.createElement('table');
+    table.className = 'json-grid';
+
+    // Create header row
+    const headerRow = table.insertRow();
+    for (const key in jsonArray[0]) {
+        const th = document.createElement('th');
+        th.textContent = key;
+        headerRow.appendChild(th);
+    }
+
+    // Create data rows
+    jsonArray.forEach(item => {
+        const row = table.insertRow();
+        for (const key in item) {
+            const cell = row.insertCell();
+            renderCell(cell, key, item[key]);
+        }
+    });
+
+    container.appendChild(table);
+}
+
+function createObjectGrid(jsonObject, container) {
+    const table = document.createElement('table');
+    table.className = 'json-grid';
+
+    // Create header row
+    const headerRow = table.insertRow();
+    const keyHeader = document.createElement('th');
+    keyHeader.textContent = 'Key';
+    const valueHeader = document.createElement('th');
+    valueHeader.textContent = 'Value';
+    headerRow.appendChild(keyHeader);
+    headerRow.appendChild(valueHeader);
+
+    // Create data rows
+    for (const key in jsonObject) {
+        const row = table.insertRow();
+        const keyCell = row.insertCell();
+        keyCell.textContent = key;
+        const valueCell = row.insertCell();
+        renderCell(valueCell, key, jsonObject[key]);
+    }
+
+    container.appendChild(table);
+}
+
+function renderCell(cell, key, value) {
+    if (typeof value === 'object' && value !== null) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = '►';
+        toggleBtn.className = 'toggle-btn';
+
+        const keySpan = document.createElement('span');
+        keySpan.textContent = key;
+        keySpan.className = 'key-span';
+
+        const container = document.createElement('div');
+        container.className = 'expandable-container';
+        container.appendChild(toggleBtn);
+        container.appendChild(keySpan);
+
+        cell.appendChild(container);
+
+        toggleBtn.onclick = () => toggleNestedObject(cell, value, toggleBtn);
+    } else {
+        cell.textContent = value;
+    }
+}
+
+function toggleNestedObject(cell, data, toggleBtn) {
+    const container = cell.querySelector('.expandable-container');
+    const existingContent = cell.querySelector('.nested-grid');
+
+    if (existingContent) {
+        existingContent.remove();
+        toggleBtn.classList.remove('rotated');
+
+    } else {
+        const nestedContainer = document.createElement('div');
+        nestedContainer.className = 'nested-grid';
+        createJsonGrid(data, nestedContainer);
+        cell.appendChild(nestedContainer);
+        toggleBtn.classList.add('rotated');
+    }
+}
 
 init();
