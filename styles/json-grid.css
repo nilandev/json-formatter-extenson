@@ -11,7 +11,7 @@
 }
 
 .json-grid {
-    width: 100%;
+    width: fit-content;
     border-collapse: separate;
     border-spacing: 0;
     border: 1px solid #e0e0e0;
@@ -130,4 +130,16 @@
     margin-left: 8px;
     padding-left: 0;
 
+}
+
+.primitive-array-content {
+    margin-top: 5px;
+    margin-left: 20px;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
 }

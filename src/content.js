@@ -1,15 +1,15 @@
 let currentTheme = 'light';
 let currentFontFamily = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace';
+let currentHeaders = {
+    request: [],
+    response: []
+};
 let jsonObj = null;
 let originalContent = null;
 let jsonViewType = 'tree';
 
 let isExpandedAll = true;
 let filteredJsonObj = null;
-let currentHeaders = {
-    request: [],
-    response: []
-};
 let filterExpression = '';
 let filterType = 'jsonpath';
 
@@ -51,11 +51,11 @@ function isJSONString(str) {
 }
 
 function renderJSON(theme, fontFamily) {
-    obj= filteredJsonObj == null ? jsonObj: filteredJsonObj;
+    let obj = filteredJsonObj == null ? jsonObj : filteredJsonObj;
 
     //remove all child nodes, before adding new ones
     const existingContainer = document.getElementById('json-container');
-    existingContainer.childNodes.forEach(child => child.remove());
+    existingContainer.innerHTML = '';
 
     switch (jsonViewType) {
         case "tree":
@@ -76,7 +76,10 @@ function renderJSON(theme, fontFamily) {
             existingContainer.appendChild(jsonGrid);
             break;
         case "flat":
-            existingContainer.appendChild(renderFlatJSON(obj));
+            const pre = document.createElement('pre');
+            pre.className = 'raw-json';
+            pre.textContent = JSON.stringify(obj, null, 2);
+            existingContainer.appendChild(pre);
             break;
     }
 }
@@ -89,13 +92,6 @@ function collapseAll() {
 function expandAll() {
     isExpandedAll = true;
     renderJSON(currentTheme, currentFontFamily);
-}
-
-function renderFlatJSON(obj) {
-    const pre = document.createElement('pre');
-    pre.className = 'raw-json';
-    pre.textContent = JSON.stringify(obj, null, 2);
-    return pre;
 }
 
 function renderNavigation() {
@@ -168,7 +164,7 @@ function addFilterUI() {
     document.getElementById('json-grid-view-button').addEventListener('click', () => switchView("grid"));
 
     document.getElementById('json-copy-button').addEventListener('click', copyJSON);
-    document.getElementById('json-download-button').addEventListener('click', downloadJson);
+    document.getElementById('json-download-button').addEventListener('click', () => exportJson(jsonObj));
     document.getElementById('json-filter-help-button').addEventListener('click', showFilterHelp);
     document.getElementById('json-expand-all-button').addEventListener('click', expandAll);
     document.getElementById('json-collapse-all-button').addEventListener('click', collapseAll); // New event
@@ -236,7 +232,7 @@ function renderHeaders() {
 
 function performFilter() {
     filterExpression = document.getElementById('json-filter-input').value;
-    if(filterExpression === '') {
+    if (filterExpression === '') {
         clearFilter();
         return; // No need to filter
     }
@@ -255,10 +251,6 @@ function performFilter() {
     renderJSON(currentTheme, currentFontFamily);
 }
 
-
-function downloadJson() {
-    exportJson(jsonObj);
-}
 
 function clearFilter() {
     document.getElementById('json-filter-input').value = '';
@@ -326,7 +318,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 
-
 function createJsonGrid(jsonData, container) {
     container.innerHTML = ''; // Clear the container
     if (Array.isArray(jsonData)) {
@@ -388,10 +379,33 @@ function createObjectGrid(jsonObject, container) {
 }
 
 function renderCell(cell, key, value) {
-    if (typeof value === 'object' && value !== null) {
+    if (Array.isArray(value)) {
         const toggleBtn = document.createElement('button');
         toggleBtn.textContent = '►';
         toggleBtn.className = 'toggle-btn';
+        toggleBtn.classList.remove('rotated');
+
+        const keySpan = document.createElement('span');
+        keySpan.textContent = `${key} (${value.length} items)`;
+        keySpan.className = 'key-span';
+
+        const container = document.createElement('div');
+        container.className = 'expandable-container';
+        container.appendChild(toggleBtn);
+        container.appendChild(keySpan);
+
+        cell.appendChild(container);
+
+        if (value.every(item => typeof item !== 'object')) {
+            toggleBtn.onclick = () => togglePrimitiveArray(cell, value, toggleBtn);
+        } else {
+            toggleBtn.onclick = () => toggleNestedObject(cell, value, toggleBtn);
+        }
+    } else if (typeof value === 'object' && value !== null) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = '►';
+        toggleBtn.className = 'toggle-btn';
+        toggleBtn.classList.remove('rotated');
 
         const keySpan = document.createElement('span');
         keySpan.textContent = key;
@@ -406,7 +420,28 @@ function renderCell(cell, key, value) {
 
         toggleBtn.onclick = () => toggleNestedObject(cell, value, toggleBtn);
     } else {
-        cell.textContent = value;
+        const valueSpan = document.createElement('span');
+        valueSpan.textContent = value;
+        valueSpan.className = 'value-span';
+        cell.appendChild(valueSpan);
+    }
+}
+
+
+
+function togglePrimitiveArray(cell, data, toggleBtn) {
+    const existingContent = cell.querySelector('.primitive-array-content');
+
+    if (existingContent) {
+        existingContent.remove();
+        toggleBtn.textContent = '►';
+        toggleBtn.classList.remove('rotated');
+    } else {
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'primitive-array-content';
+        contentDiv.textContent = JSON.stringify(data);
+        cell.appendChild(contentDiv);
+        toggleBtn.classList.add('rotated');
     }
 }
 
@@ -416,8 +451,8 @@ function toggleNestedObject(cell, data, toggleBtn) {
 
     if (existingContent) {
         existingContent.remove();
+        toggleBtn.textContent = '►';
         toggleBtn.classList.remove('rotated');
-
     } else {
         const nestedContainer = document.createElement('div');
         nestedContainer.className = 'nested-grid';
