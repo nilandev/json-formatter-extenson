@@ -195,7 +195,18 @@ function switchTab(tabName) {
 
 
 function renderHeaders() {
+    const headerTab = document.getElementById('headers-tab'); // Assuming the header tab has an ID of 'header-tab'
     console.log('Rendering headers', currentHeaders);
+
+    if (!currentHeaders ||
+        (!currentHeaders.request || currentHeaders.request.length === 0) &&
+        (!currentHeaders.response || currentHeaders.response.length === 0)) {
+        // Hide the header tab
+        headerTab.style.display = 'none';
+        return;
+    }
+
+    headerTab.style.display = 'inline-block';
     const headersContainer = document.getElementById('headers-container');
     if (currentHeaders && currentHeaders.request && currentHeaders.response) {
         let headersHTML = '<h3 class="headerGroup">Response Headers</h3>';
@@ -210,7 +221,6 @@ function renderHeaders() {
             `;
         });
         headersHTML += '</tbody></table>';
-
         headersHTML += '<h3 class="headerGroup">Request Headers</h3>';
         headersHTML += '<table>';
         headersHTML += '<tbody>';
@@ -223,10 +233,7 @@ function renderHeaders() {
             `;
         });
         headersHTML += '</tbody></table>';
-
         headersContainer.innerHTML = headersHTML;
-    } else {
-        headersContainer.innerHTML = '<p>No headers available.</p>';
     }
 }
 
