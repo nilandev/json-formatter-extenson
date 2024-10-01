@@ -10,7 +10,10 @@ chrome.webRequest.onCompleted.addListener(async function (details) {
 }, {urls: ['<all_urls>']}, ['responseHeaders'])
 
 chrome.webRequest.onBeforeSendHeaders.addListener(function (details) {
-  console.log("onBeforeSendHeaders:: Request headers:", details.requestHeaders);
+  if ((contentTypeHeader && contentTypeHeader.value.includes('text/html')) || (details.initiator && details.initiator === tab.url)) {
+    console.log("onCompleted:: Skipping HTML content or AJAX request");
+    return;
+  }
 
   if (details.tabId === currentTabId) {
     currentHeaders.request = sortHeaders(details.requestHeaders);

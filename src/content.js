@@ -196,12 +196,9 @@ function switchTab(tabName) {
 
 function renderHeaders() {
     const headerTab = document.getElementById('headers-tab'); // Assuming the header tab has an ID of 'header-tab'
-    console.log('Rendering headers', currentHeaders);
-
     if (!currentHeaders ||
         (!currentHeaders.request || currentHeaders.request.length === 0) &&
         (!currentHeaders.response || currentHeaders.response.length === 0)) {
-        // Hide the header tab
         headerTab.style.display = 'none';
         return;
     }
